@@ -1,0 +1,43 @@
+name: Validate OpenAPI File
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+      - name: Turborepo cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-node-${{ matrix.node-version }}
+      - name: Build packages
+        run: pnpm build:packages
+      - name: Format OpenAPI File
+        run: pnpm @scalar/cli format ../../packages/galaxy/src/specifications/3.1.yaml
+      - name: Validate OpenAPI File
+        run: pnpm @scalar/cli validate ../../packages/galaxy/src/specifications/3.1.yaml
+      - name: Update Scalar Sandbox (https://sandbox.scalar.com/e/MeCHQ)
+        if: github.ref == 'refs/heads/main'
+        run: pnpm @scalar/cli share ../../packages/galaxy/src/specifications/3.1.yaml --token=${{ secrets.SANDBOX_TOKEN }}
+        env:
+          SANDBOX_TOKEN: ${{ secrets.SANDBOX_TOKEN }}

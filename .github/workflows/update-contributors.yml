@@ -1,0 +1,21 @@
+name: Update Contributors in README
+
+on:
+  schedule:
+    - cron: '0 15 * * *'
+
+jobs:
+  update-readme:
+    name: Update the README
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Update the list of contributors
+        uses: akhilmhdh/contributors-readme-action@v2.3.10
+        with:
+          use_username: true
+        env:
+          # https://github.com/settings/tokens/new
+          # Expiration: No expiration
+          # Select: read:org
+          GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
